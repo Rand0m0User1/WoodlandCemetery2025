@@ -260,7 +260,9 @@ html {
 }
 
 #plot-inhabitants {
-    margin: 5px 20px 5px 10px;
+    max-height: 300px; /* Adjust this value based on screen size */
+    overflow-y: auto;
+    padding-right: 10px; /* Prevents text from touching the scrollbar */
 }
 
 .plot-inhabitant {
