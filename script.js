@@ -27,32 +27,33 @@ sheetData.sga contains information for every grave in the cemetery that has only
 sheetData.notable contains information for the graves of some of the more famous graves in the cemetery.
 */
 var sheetData = {
-all: [],
-sga: [],
-notable: []
+  all: [],
+  sga: [],
+  notable: [],
 };
 
 window.onload = () => {
-// Loading Text
-// This displays while the search bar is loading.
-// The display updates every half second
-let dotCount = 1;
-setInterval(() => {
+  // Loading Text
+  // This displays while the search bar is loading.
+  // The display updates every half second
+  let dotCount = 1;
+  setInterval(() => {
     // Updates the text
-    document.getElementById("loading").innerText = "Loading" + ".".repeat(dotCount);
+    document.getElementById("loading").innerText =
+      "Loading" + ".".repeat(dotCount);
 
     // Increments the counter
     dotCount = (dotCount % 3) + 1;
-}, 500);
+  }, 500);
 
-new Promise(async (resolve) => {
+  new Promise(async (resolve) => {
     // Fetching data from the google sheet
     sheetData.all = await getInfo("All Lots");
     sheetData.sga = await getInfo("All SGA");
     sheetData.notable = await getInfo("Notable Burials");
 
     resolve();
-}).then(() => {
+  }).then(() => {
     // Removing the title row from each sheet
     sheetData.all.splice(0, 1);
     sheetData.sga.splice(0, 1);
@@ -60,169 +61,174 @@ new Promise(async (resolve) => {
 
     // Loading information into the search form
     sheetData.all.forEach((grave, index) => {
-        let option = document.createElement("option");
-        option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (${grave[SECTION]} ${grave[LOT_NUMBER]})`.replace(/  */g, " ");
+      let option = document.createElement("option");
+      option.value =
+        `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (${grave[SECTION]} ${grave[LOT_NUMBER]})`.replace(
+          /  */g,
+          " "
+        );
 
-        document.getElementById("name-list").appendChild(option);
+      document.getElementById("name-list").appendChild(option);
     });
 
     // Overriding the submit event for the form
     let form = document.getElementById("search-form");
     form.onsubmit = (evt) => {
-        // Hiding the currently highlighted graves.
-        for (let grave of document.getElementsByClassName("grave")) {
-            grave.style.opacity = 0;
-        }
+      // Hiding the currently highlighted graves.
+      for (let grave of document.getElementsByClassName("grave")) {
+        grave.style.opacity = 0;
+      }
 
-        evt.preventDefault();
+      evt.preventDefault();
 
-        let info = document.getElementById("name-input").value;
-        displayPerson(info);
-    }
+      let info = document.getElementById("name-input").value;
+      displayPerson(info);
+    };
 
     // Having the submit button on the form do something.
     let submit = document.getElementById("submit-search-form");
     submit.onclick = () => {
-        // Hiding the currently highlighted graves.
-        for (let grave of document.getElementsByClassName("grave")) {
-            grave.style.opacity = 0;
-        }
+      // Hiding the currently highlighted graves.
+      for (let grave of document.getElementsByClassName("grave")) {
+        grave.style.opacity = 0;
+      }
 
-        // When the form is submitted, get the selected person and display their info.
-        let info = document.getElementById("name-input").value;
-        displayPerson(info);
-    }
-    
+      // When the form is submitted, get the selected person and display their info.
+      let info = document.getElementById("name-input").value;
+      displayPerson(info);
+    };
+
     // Displaying the search form
     form.classList.add("fade-in");
     setTimeout(() => {
-        form.classList.remove("fade-in");
-        form.style.opacity = "1";
+      form.classList.remove("fade-in");
+      form.style.opacity = "1";
     }, 500);
 
     // Hiding the loading text
-    let loading = document.getElementById("loading")
+    let loading = document.getElementById("loading");
     loading.classList.add("fade-out");
     setTimeout(() => {
-        loading.classList.remove("fade-out");
-        loading.style.opacity = "0";
+      loading.classList.remove("fade-out");
+      loading.style.opacity = "0";
     }, 500);
-});
+  });
 
-// Getting the label object.
-var label = document.getElementById("label");
+  // Getting the label object.
+  var label = document.getElementById("label");
 
-// Adding event listeners to each landmark.
-var landmarks = document.getElementsByClassName("landmark");
-for (let landmark of landmarks) {
+  // Adding event listeners to each landmark.
+  var landmarks = document.getElementsByClassName("landmark");
+  for (let landmark of landmarks) {
     // Displaying the label for this landmark.
     landmark.onmouseenter = () => {
-        label.style.display = "block";
-    }
+      label.style.display = "block";
+    };
 
     // Updating the value and position of the label.
     landmark.onmousemove = (evt) => {
-        label.style.left = `${evt.clientX + 10}px`;
-        label.style.top = `${evt.clientY + 10}px`;
+      label.style.left = `${evt.clientX + 10}px`;
+      label.style.top = `${evt.clientY + 10}px`;
 
-        label.innerText = landmark.classList[1];
-    }
+      label.innerText = landmark.classList[1];
+    };
 
     // Hiding the label fot this landmark.
     landmark.onmouseleave = () => {
-        label.style.display = "none";
-    }
-}
+      label.style.display = "none";
+    };
+  }
 
-// Adding event listeners to each grave.
-var graves = document.getElementsByClassName("grave");
-for (let grave of graves) {
+  // Adding event listeners to each grave.
+  var graves = document.getElementsByClassName("grave");
+  for (let grave of graves) {
     // Displaying the label and the polygon for this grave.
     grave.onmouseover = () => {
-        label.style.display = "block";
-        grave.style.opacity = 1;
-    }
+      label.style.display = "block";
+      grave.style.opacity = 1;
+    };
 
     // Updating the value and position of the label.
     grave.onmousemove = (evt) => {
-        label.style.left = `${evt.clientX + 10}px`;
-        label.style.top = `${evt.clientY + 10}px`;
+      label.style.left = `${evt.clientX + 10}px`;
+      label.style.top = `${evt.clientY + 10}px`;
 
-        label.innerText = grave.classList[1];
-    }
+      label.innerText = grave.classList[1];
+    };
 
     // Hiding the label and the polygon for this grave.
     grave.onmouseleave = () => {
-        label.style.display = "none";
-        grave.style.opacity = 0;
-    }
+      label.style.display = "none";
+      grave.style.opacity = 0;
+    };
 
     // Displaying the people buried in the selected section.
     grave.onclick = () => {
-        displayPlot(grave.classList[1])
-    }
-}
+      displayPlot(grave.classList[1]);
+    };
+  }
 
-// Adding the notable burials functionality.
-document.getElementById("show-notable-burials").onclick = () => {
+  // Adding the notable burials functionality.
+  document.getElementById("show-notable-burials").onclick = () => {
     displayPlot("Notable Burials");
-}
+  };
 
-// Adding click event listeners to the person-hide element.
-document.getElementById("person-hide").onclick = () => {
+  // Adding click event listeners to the person-hide element.
+  document.getElementById("person-hide").onclick = () => {
     document.getElementById("person-data").style.display = "none";
 
     // Hiding the currently highlighted graves.
     for (let grave of document.getElementsByClassName("grave")) {
-        grave.style.opacity = 0;
+      grave.style.opacity = 0;
     }
-}
+  };
 
-// Adding click event listeners to the plot-hide element.
-document.getElementById("plot-hide").onclick = () => {
+  // Adding click event listeners to the plot-hide element.
+  document.getElementById("plot-hide").onclick = () => {
     document.getElementById("plot-data").style.display = "none";
-}
+  };
 
-// Adding click event listeners to the sketchfab-hide element.
-document.getElementById("sketchfab-hide").onclick = () => {
+  // Adding click event listeners to the sketchfab-hide element.
+  document.getElementById("sketchfab-hide").onclick = () => {
     document.getElementById("sketchfab-container").style.display = "none";
-}
-}
+  };
+};
 
 /**
-* This function loads a list of people that are buried in a specific lot.
-* It also is used to display notable burials such as Arthur Ashe and Martha Anderson.
-* To display notable burials, the plotInfo string is "Notable Burials".
-* 
-* @param {string} plotInfo The plot number {section letter}{lot number} of the grave. EX: ("M11")
-*/
+ * This function loads a list of people that are buried in a specific lot.
+ * It also is used to display notable burials such as Arthur Ashe and Martha Anderson.
+ * To display notable burials, the plotInfo string is "Notable Burials".
+ *
+ * @param {string} plotInfo The plot number {section letter}{lot number} of the grave. EX: ("M11")
+ */
 function displayPlot(plotInfo) {
-// Finding the group of people to list.
-var people = [];
-if (plotInfo == "Notable Burials") {
+  // Finding the group of people to list.
+  var people = [];
+  if (plotInfo == "Notable Burials") {
     people = sheetData.notable;
-} else {
-    sheetData.all.forEach(person => {
-        if (plotInfo == `${person[SECTION]}${person[LOT_NUMBER]}`) people.push(person);
-    })
-}
+  } else {
+    sheetData.all.forEach((person) => {
+      if (plotInfo == `${person[SECTION]}${person[LOT_NUMBER]}`)
+        people.push(person);
+    });
+  }
 
-// Hides the individial person container.
-document.getElementById("person-data").style.display = "none";
-    
-// Displays a plot info div and adds a caption.
-document.getElementById("plot-data").style.display = "block";
-document.getElementById("plot-name").innerText = plotInfo;
+  // Hides the individial person container.
+  document.getElementById("person-data").style.display = "none";
 
-// Clearing the list of people and adjusting the CSS.
-let inhabitants = document.getElementById("plot-inhabitants")
-inhabitants.innerHTML = "";
-inhabitants.style.height = "auto";
+  // Displays a plot info div and adds a caption.
+  document.getElementById("plot-data").style.display = "block";
+  document.getElementById("plot-name").innerText = plotInfo;
 
-for (let person of people) {
+  // Clearing the list of people and adjusting the CSS.
+  let inhabitants = document.getElementById("plot-inhabitants");
+  inhabitants.innerHTML = "";
+  inhabitants.style.height = "auto";
+
+  for (let person of people) {
     // Creating the li element for each person
     let inhabitant = document.createElement("li");
-    inhabitant.classList.add("plot-inhabitant")
+    inhabitant.classList.add("plot-inhabitant");
     inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (${person[SECTION]} ${person[LOT_NUMBER]})`;
 
     // Removing double spaces from the innerText.
@@ -230,88 +236,77 @@ for (let person of people) {
 
     // Adding click events
     inhabitant.onclick = () => {
-        displayPerson(inhabitant.innerText);
-    }
+      displayPerson(inhabitant.innerText);
+    };
 
     // Adding the inhabitant to the inhabitants list.
     inhabitants.appendChild(inhabitant);
-}
+  }
 
-// Adding a scroll bar if necessary
-inhabitants.style.maxHeight = "300px"; // Adjust this as needed
-inhabitants.style.overflowY = "auto";
+  // Adding a scroll bar if necessary
+  if (inhabitants.style.height > window.innerHeight - 220) {
+    inhabitants.style.overflowY = "scroll";
+    inhabitants.style.height = window.innerHeight - 220;
+  } else {
+    inhabitants.style.overflowY = "hidden";
+    inhabitants.style.height = "auto";
+  }
 }
 
 function displayPerson(personInfo) {
-// Showing the person data container
-document.getElementById("person-data").style.display = "block";
+  // Showing the person data container
+  document.getElementById("person-data").style.display = "block";
 
-// Hiding the plot data container
-document.getElementById("plot-data").style.display = "none";
+  // Hiding the plot data container
+  document.getElementById("plot-data").style.display = "none";
 
-// Creating a list of people that match the description.
-let matches = [];
+  // Creating a list of people that match the description.
+  let matches = [];
 
-if (personInfo.indexOf("(") != -1) {
-    // Splitting the info string into different parts.
-    // Normally, I'd split on the spaces, but this allows me to separat the names and numbers easier.
-    let splitInfo = personInfo.split(" (");
+  // Clean up the search input: remove extra spaces and periods
+  let searchInput = personInfo
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\./g, "")
+    .trim();
 
-    // Splitting the first array into two smaller ones.
-    let namePart = splitInfo[0].split(" ");
-    let numPart = splitInfo[1].replace(")", "").split(" ");
+  // Searching all data.
+  for (let entry of sheetData.all) {
+    // Create different versions of the name for matching
+    let fullName =
+      `${entry[FIRST_NAME]} ${entry[MIDDLE_NAME]} ${entry[LAST_NAME]}`
+        .toLowerCase()
+        .replace(/\s+/g, " ")
+        .replace(/\./g, "")
+        .trim();
+    let shortName = `${entry[FIRST_NAME]} ${entry[LAST_NAME]}`
+      .toLowerCase()
+      .trim();
+    let location = `${entry[SECTION]} ${entry[LOT_NUMBER]}`
+      .toLowerCase()
+      .trim();
 
-    // Getting the values for each input.
-    let firstName = (namePart.length >= 2 ? namePart[0] : "");
-    let middleName = (namePart.length == 3 ? namePart[1] : "");
-    let lastName = namePart[namePart.length - 1];
-    let section = numPart[0];
-    let lotNumber = (numPart.length == 2 ? numPart[1] : "");
+    // Create the full string with location
+    let fullString = `${fullName} (${location})`;
+    let shortString = `${shortName} (${location})`;
 
-    getPersonMatches([firstName, middleName, lastName, section, lotNumber]).forEach(match => {
-        matches.push(match);
-    });
-} else if (personInfo == "") {
-    getPersonMatches(["", "", "", "", ""]).forEach(match => {
-        matches.push(match);
-    })
-} else {
-    // Since there were no parenthesis, the string is probably just a name.
-    let names = personInfo.split(" ");
-
-    if (names.length == 1) {
-        // name could be either first, last, or middle.
-        getPersonMatches([names[0], "", "", "", ""]).forEach(match => {
-            matches.push(match);
-        });
-
-        getPersonMatches(["", names[0], "", "", ""]).forEach(match => {
-            matches.push(match);
-        });
-
-        getPersonMatches(["", "", names[0], "", ""]).forEach(match => {
-            matches.push(match);
-        });
-    } else if (names.length == 2) {
-        getPersonMatches([names[0], "", names[1], "", ""]).forEach(match => {
-            matches.push(match);
-        });
-    } else if (names.length == 3) {
-        getPersonMatches([names[0], names[1], names[2], "", ""]).forEach(match => {
-            matches.push(match);
-        });
+    // Check if EITHER version matches
+    if (fullString.includes(searchInput) || shortString.includes(searchInput)) {
+      matches.push(entry);
     }
-}
+  }
 
-// Showing the number of matches found
-document.getElementById("person-count").innerText = `${matches.length} match${matches.length == 1 ? "" : "es"} found`; 
+  // Showing the number of matches found
+  document.getElementById("person-count").innerText = `${matches.length} match${
+    matches.length == 1 ? "" : "es"
+  } found`;
 
-// Clearing existing records
-var records = document.getElementById("person-records");
-records.innerHTML = "";
+  // Clearing existing records
+  var records = document.getElementById("person-records");
+  records.innerHTML = "";
 
-// Showing matches found
-for (let match of matches) {
+  // Showing matches found
+  for (let match of matches) {
     let div = document.createElement("div");
     div.classList.add("person-record");
 
@@ -356,21 +351,25 @@ for (let match of matches) {
     // Creating the deathDate element and adding it to the info div.
     let deathDate = document.createElement("p");
     deathDate.classList.add("person-death-date");
-    deathDate.innerText = `Death Date: ${match[DEATH_DATE] == "??-??-????" ? "Unknown" : match[DEATH_DATE]}`;
+    deathDate.innerText = `Death Date: ${
+      match[DEATH_DATE] == "??-??-????" ? "Unknown" : match[DEATH_DATE]
+    }`;
     info.append(deathDate);
 
     // Creating the burialDate element and adding it to the info div.
     let burialDate = document.createElement("p");
     burialDate.classList.add("person-burial-date");
-    burialDate.innerText = `Burial Date: ${match[BURIAL_DATE] == "??-??-????" ? "Unknown" : match[BURIAL_DATE]}`;
+    burialDate.innerText = `Burial Date: ${
+      match[BURIAL_DATE] == "??-??-????" ? "Unknown" : match[BURIAL_DATE]
+    }`;
     info.append(burialDate);
 
     // Creating the notes element and adding it to the info div.
     if (match[NOTES] != "") {
-        let notes = document.createElement("p");
-        notes.classList.add("person-notes");
-        notes.innerText = `Notes: ${match[NOTES]}`;
-        info.append(notes);
+      let notes = document.createElement("p");
+      notes.classList.add("person-notes");
+      notes.innerText = `Notes: ${match[NOTES]}`;
+      info.append(notes);
     }
 
     // Adding the info div to the main div.
@@ -378,36 +377,39 @@ for (let match of matches) {
 
     // Adding the Find-A-Grave link, if it exists, to the main div.
     if (match[FIND_A_GRAVE_ID] != "") {
-        // Spacing the buttons from the rest of the text.
-        div.append(document.createElement("br"));
+      // Spacing the buttons from the rest of the text.
+      div.append(document.createElement("br"));
 
-        // Adding the find a grave button to the document.
-        let findAGraveLink = document.createElement("input");
-        findAGraveLink.type = "button";
-        findAGraveLink.classList.add("find-a-grave-link");
-        findAGraveLink.value = "FindAGrave.com";
-        findAGraveLink.onclick = () => {
-            window.open(`https://findagrave.com/memorial/${match[FIND_A_GRAVE_ID]}`, "_blank");
-        }
-        
-        div.append(findAGraveLink);
+      // Adding the find a grave button to the document.
+      let findAGraveLink = document.createElement("input");
+      findAGraveLink.type = "button";
+      findAGraveLink.classList.add("find-a-grave-link");
+      findAGraveLink.value = "FindAGrave.com";
+      findAGraveLink.onclick = () => {
+        window.open(
+          `https://findagrave.com/memorial/${match[FIND_A_GRAVE_ID]}`,
+          "_blank"
+        );
+      };
+
+      div.append(findAGraveLink);
     }
 
     // Adding the sketchfab button, if it exists, to the main div.
     if (match[SKETCHFAB_ID] != "") {
-        // Separating the Find-A-Grave and sketchfab buttons
-        // div.append(document.createElement("br"));
+      // Separating the Find-A-Grave and sketchfab buttons
+      // div.append(document.createElement("br"));
 
-        // Adding the sketchfab button.
-        let sketchfabView = document.createElement("input");
-        sketchfabView.type = "button";  
-        sketchfabView.classList.add("sketchfab-view");
-        sketchfabView.value = "View 3D Grave";
-        sketchfabView.onclick = () => {
-            displaySketchFab(match);
-        };
+      // Adding the sketchfab button.
+      let sketchfabView = document.createElement("input");
+      sketchfabView.type = "button";
+      sketchfabView.classList.add("sketchfab-view");
+      sketchfabView.value = "View 3D Grave";
+      sketchfabView.onclick = () => {
+        displaySketchFab(match);
+      };
 
-        div.append(sketchfabView);
+      div.append(sketchfabView);
     }
 
     // The div is now complete, adding it to the page.
@@ -417,61 +419,74 @@ for (let match of matches) {
     let objClass = `${match[SECTION]}${match[LOT_NUMBER]}`;
     let grave = document.getElementsByClassName(objClass);
     if (grave[0] != undefined) {
-        grave[0].style.opacity = "1";
+      grave[0].style.opacity = "1";
     }
-}
+  }
 }
 
 function getPersonMatches(info) {
-// A list of people that have data matching the info parameter.
-let matches = [];
+  // A list of people that have data matching the info parameter.
+  let matches = [];
 
-// Searching all data.
-for (let entry of sheetData.all) {
+  // Searching all data.
+  for (let entry of sheetData.all) {
     // Checking the first name, middle name, last name, section, and lot numbers
     if (
-        (info[0] == "" || entry[FIRST_NAME].toLowerCase() == info[0].toLowerCase()) &&
-        (info[1] == "" || entry[MIDDLE_NAME].toLowerCase() == info[1].toLowerCase()) &&
-        (info[2] == "" || entry[LAST_NAME].toLowerCase() == info[2].toLowerCase()) &&
-        (info[3] == "" || entry[SECTION].toLowerCase() == info[3].toLowerCase()) &&
-        (info[4] == "" || entry[LOT_NUMBER].toLowerCase() == info[4].toLowerCase())
+      (info[0] == "" ||
+        entry[FIRST_NAME].toLowerCase() == info[0].toLowerCase()) &&
+      (info[1] == "" ||
+        entry[MIDDLE_NAME].toLowerCase() == info[1].toLowerCase()) &&
+      (info[2] == "" ||
+        entry[LAST_NAME].toLowerCase() == info[2].toLowerCase()) &&
+      (info[3] == "" ||
+        entry[SECTION].toLowerCase() == info[3].toLowerCase()) &&
+      (info[4] == "" ||
+        entry[LOT_NUMBER].toLowerCase() == info[4].toLowerCase())
     ) {
-        matches.push(entry);
+      matches.push(entry);
     }
-}
+  }
 
-// Returning the matches.
-return matches;
+  // Returning the matches.
+  return matches;
 }
 
 function displaySketchFab(person) {
-// Showing the sketchfab container.
-document.getElementById("sketchfab-container").style.display = "block";
+  // Showing the sketchfab container.
+  document.getElementById("sketchfab-container").style.display = "block";
 
-// Adding a title and source for the embed.
-document.getElementById("sketchfab-title").innerText = `${person[FIRST_NAME]} ${person[LAST_NAME]}'s Gravestone`;
-document.getElementById("sketchfab-embed").src = `https://sketchfab.com/models/${person[SKETCHFAB_ID]}/embed`;
+  // Adding a title and source for the embed.
+  document.getElementById(
+    "sketchfab-title"
+  ).innerText = `${person[FIRST_NAME]} ${person[LAST_NAME]}'s Gravestone`;
+  document.getElementById(
+    "sketchfab-embed"
+  ).src = `https://sketchfab.com/models/${person[SKETCHFAB_ID]}/embed`;
 }
 
 /**
-* Returns a JSON of the values on the spreadsheet linked below.
-* It uses the "sheetName" parameter to determine which sheet to get the information from.
-* https://docs.google.com/spreadsheets/d/1TMlB6OfVMGAKSmMoX_FL42b7g6ai8y7C_q0lcAxr-1E/edit
-*/
+ * Returns a JSON of the values on the spreadsheet linked below.
+ * It uses the "sheetName" parameter to determine which sheet to get the information from.
+ * https://docs.google.com/spreadsheets/d/1TMlB6OfVMGAKSmMoX_FL42b7g6ai8y7C_q0lcAxr-1E/edit
+ */
 async function getInfo(sheetName) {
-return await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(sheetName)}?key=${API_KEY}`)
-    .then(resp => resp.json())
-    .then(json => {
-        for (let i = 0; i < json.values.length; i++) {
-            for (let j = 0; j < 14; j++) {
-                json.values[i][j] = (json.values[i][j] == undefined) ? "" : json.values[i][j].trim();
-            }
+  return await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(
+      sheetName
+    )}?key=${API_KEY}`
+  )
+    .then((resp) => resp.json())
+    .then((json) => {
+      for (let i = 0; i < json.values.length; i++) {
+        for (let j = 0; j < 14; j++) {
+          json.values[i][j] =
+            json.values[i][j] == undefined ? "" : json.values[i][j].trim();
         }
+      }
 
-        if (sheetName == "All SGA") {
-            
-        }
+      if (sheetName == "All SGA") {
+      }
 
-        return json.values;
+      return json.values;
     });
 }

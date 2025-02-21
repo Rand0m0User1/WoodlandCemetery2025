@@ -16,20 +16,22 @@
         <!-- Search User Form -->
         <!-- This form allows users to search for people by their name. -->
         <form id="search-form">
-            <!-- Input box for the search form. -->
-            <label for="name">Name:</label>
-            <!-- This is a list of every person as options for the search form. -->
-            <datalist id="name-list"></datalist>
-            <input id="name-input" type="text" name="name" list='name-list'>
+            <div id="input-container">
+                <!-- Input box for the search form. -->
+                <label for="name">Name:</label>
+                <!-- This is a list of every person as options for the search form. -->
+                <datalist id="name-list"></datalist>
+                <input id="name-input" type="text" name="name" list="name-list">
+            </div>
             
-            <br/>
-
-            <!-- Displays a list of famous people buried at the cemetery. -->
-            <input id="show-notable-burials" type="button" value="See Notable Burials">
-
-            <!-- Submit button for the search form. -->
-            <input id="submit-search-form" type="button" value="Submit">
-        </form>  
+            <div id="button-container">
+                <!-- Displays a list of famous people buried at the cemetery. -->
+                <input id="show-notable-burials" type="button" value="See Notable Burials">
+                
+                <!-- Submit button for the search form. -->
+                <input id="submit-search-form" type="button" value="Submit">
+            </div>
+        </form>
 
         <!-- Person Info -->
         <!-- Displays information about people. -->
