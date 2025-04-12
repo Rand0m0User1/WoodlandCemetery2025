@@ -551,7 +551,7 @@
         </style>
         <script>
             // Constants used when getting the values from the spreadsheet.
-            const SPREADSHEET_ID = "1TMlB6OfVMGAKSmMoX_FL42b7g6ai8y7C_q0lcAxr-1E";
+            const SPREADSHEET_ID = "1oB7kgRwhQm-dYftSOGRPD0xIaAJzecGpxFUHgBup80I";
             const API_KEY = "AIzaSyB2nE9aGbN51EuV_S0yGf-IyxvcGGUcDao";
             
             // These constants allow easier access to the data from each google sheet.
@@ -564,12 +564,12 @@
             const LAST_NAME = 4;
             const FIRST_NAME = 5;
             const MIDDLE_NAME = 6;
-            const TITLE = 7;
-            const DEATH_DATE = 8;
-            const BURIAL_DATE = 9;
-            const NOTES = 10;
-            const FIND_A_GRAVE_ID = 11;
-            const SKETCHFAB_ID = 12;
+            const TITLE = 8;
+            const DEATH_DATE = 9;
+            const BURIAL_DATE = 10;
+            const NOTES = 11;
+            const FIND_A_GRAVE_ID = 12;
+            const SKETCHFAB_ID = 13;
             
             const SINGLE_GRAVES = ['D', 'ZZ', 'MHillside'];
             
@@ -589,6 +589,17 @@
               { name: "Row6-L", min: 508, max: 530 },
               { name: "RowX", values: ['92X', '93X', '99 X', '100 X', '138', '152a', '157 X', '208', '210', '280', '289A', '351', '352', '356', '358', '498'] }
             ];
+
+            // Section ZZ row ranges (example - you’ll need to adjust bas   ed on your sheet)
+            const SECTION_ZZ_ROWS = [
+              {name: "Section1", min: 1, max: 9 },
+
+              {name: "Section2", min: 10, max: 20},
+
+              {name: "Section3", min: 21, max: 34}
+            ];
+
+
             
             /* 
             Data structure for info from the google sheet.
@@ -775,7 +786,32 @@
                   displayPlot("MHillside");
                 };
               }
-            
+              
+              //Event listener for Section ZZ
+              var zzPolygons = document.querySelectorAll('[class^="ZZ "]');
+              for (let polygon of zzPolygons) {
+                polygon.onmouseover = () => {   
+                label.style.display = "block";
+                polygon.style.opacity = 1;
+              };
+
+                polygon.onmousemove = (evt) => {        
+                    label.style.left = `${evt.clientX + 10}px`;
+                    label.style.top = `${evt.clientY + 10}px`;
+                    label.innerText = polygon.classList[0] + " " + polygon.classList[1];
+                };
+
+                polygon.onmouseleave = () => {
+                    label.style.display = "none";
+                    polygon.style.opacity = 0;
+                };
+
+                polygon.onclick = () => {
+                    displayPlot(polygon.classList[0] + " " + polygon.classList[1]);
+                };
+            }
+
+
               // Event listener specifically for Section D
               var sectionDPolygons = document.querySelectorAll('[class^="D "]');
               for (let polygon of sectionDPolygons) {
@@ -980,12 +1016,35 @@
             
                 // ACCOUNTING FOR SINGLE GRAVE AREAS ENDS HERE
             
+              } else if (plotInfo.startsWith("ZZ Section")) {
+                let sectionName = plotInfo.replace("ZZ ", "");
+
+                for (let person of sheetData.all) {
+                  if (person[SECTION] === "ZZ") {
+                    const grave = person[GRAVE_NUMBER];
+
+                    const matchingRow = SECTION_ZZ_ROWS.find((row) => {
+                      if (row.name !== sectionName) return false;
+
+                      if (row.values) {
+                        return row.values.includes(grave);
+                      } else {
+                        const graveNum = parseInt(grave);
+                        return graveNum >= row.min && graveNum <= row.max;
+                      }
+                    });
+
+                    if (matchingRow) {
+                      people.push(person);
+                    } 
+                  }
+                }
               } else {
                 sheetData.all.forEach((person) => {
                   if (plotInfo == `${person[SECTION]}${person[LOT_NUMBER]}`)
                     people.push(person);
                 });
-              }
+              } 
             
               // Hides the individual person container.
               document.getElementById("person-data").style.display = "none";
@@ -1246,7 +1305,7 @@
                     }
                   } else if (sect === "MHillside") {
                     objClass = "MHillside";
-                  } /* else if (sect === "ZZ") {
+                  } else if (sect === "ZZ") {
                     const graveNum = parseInt(grave);
                     const rowDef = SECTION_ZZ_ROWS.find(function (row) {
                       // Check if grave num is within defined ranges
@@ -1255,7 +1314,7 @@
                     if (rowDef) {
                       objClass = `ZZ ${rowDef.name}`;
                     }
-                  } */
+                  }
             
                   // Add additional cases for other single grave areas
                 } else {
