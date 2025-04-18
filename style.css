@@ -158,6 +158,17 @@ label {
     text-shadow: rgba(80, 94, 26, 1) 0 0 3px;
 }
 
+.confirmed-tag {
+    display: inline-block;
+    background-color: rgba(10, 160, 10, 0.8);
+    color: white;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
 .person-record {
     margin-left: 5px;
 }
@@ -339,8 +350,7 @@ label {
 }
 
 
-
-/*---------------------------------- changes ------------------------------*/
+/*----------------------------------------------------------------*/
 
 
 #map-image,
@@ -408,7 +418,13 @@ body {
     cursor: pointer;
 }
 
-/* Mobile styles */
+#search-icon {
+    width: 28px;
+    height: 28px;
+    margin-top: 7px;
+}
+
+
 @media (max-width: 768px) {
     #mobile-search-toggle {
         display: block;
@@ -497,14 +513,6 @@ body {
     stroke: var(--landmark-border-color);
     stroke-width: 3px;
 }
-
-/* 
- *
- *
- * Highlighted graves!! CHANGE OPACITY TO 1 TO SEE ALL PLOTS CLEARLY
- *
- *
- */
 
 .grave,
 .MHillside,
