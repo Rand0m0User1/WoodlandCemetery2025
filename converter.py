@@ -1,7 +1,7 @@
 # Opening the source files
-html = open("index.html", "r")
-css = open("style.css", "r")
-js = open("script.js", "r")
+html = open("WoodlandCemetery2025-main\index.html", "r")
+css = open("WoodlandCemetery2025-main\style.css", "r")
+js = open("WoodlandCemetery2025-main\script.js", "r")
 
 # Since we run str.format later, each "{" and "}" needs to be escaped with a "\"
 # I also add the equivalent of three tabs to the beginning of each line so that the document is properly formatted.
@@ -20,7 +20,7 @@ htmlData = html.read()
 htmlData = "\n".join(htmlData.split("\n")[10:1994])
 
 # Opening the file where the output will be written
-outfile = open("main.html", "w")
+outfile = open("WoodlandCemetery2025-main\main.html", "w")
 
 # Putting the data together into a single string. (It's formatted too!)
 intro = "<!-- To anybody editing this document, I am truly sorry for what you are about to witness. -->\n<!-- This is the only way we could find to have CSS and JS work inside of the HTML embed on Wix. -->\n\n<!-- If it helps, here are the locations of the different parts of the code. -->\n<!-- CSS starts on line {cssPos} -->\n<!-- JS starts on line {jsPos} -->\n<!-- HTML body starts on line {htmlPos} -->\n"
