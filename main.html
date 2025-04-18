@@ -2,9 +2,9 @@
 <!-- This is the only way we could find to have CSS and JS work inside of the HTML embed on Wix. -->
 
 <!-- If it helps, here are the locations of the different parts of the code. -->
-<!-- CSS starts on line 11 -->
-<!-- JS starts on line 552 -->
-<!-- HTML body starts on line 1370 -->
+<!-- CSS starts on line 12 -->
+<!-- JS starts on line 569 -->
+<!-- HTML body starts on line 1458 -->
 <!DOCTYPE html>
 <html>
     <head>
@@ -167,6 +167,17 @@
                 font-size: 17pt;
                 margin: 7px 5px 7px 5px;
                 text-shadow: rgba(80, 94, 26, 1) 0 0 3px;
+            }
+            
+            .confirmed-tag {
+                display: inline-block;
+                background-color: rgba(10, 160, 10, 0.8);
+                color: white;
+                font-weight: bold;
+                padding: 2px 6px;
+                border-radius: 4px;
+                letter-spacing: 0.5px;
+                margin-bottom: 5px;
             }
             
             .person-record {
@@ -350,7 +361,6 @@
             }
             
             
-            
             /*----------------------------------------------------------------*/
             
             
@@ -417,6 +427,12 @@
                 line-height: 45px;
                 z-index: 10;
                 cursor: pointer;
+            }
+            
+            #search-icon {
+                width: 28px;
+                height: 28px;
+                margin-top: 7px;
             }
             
             
@@ -570,6 +586,7 @@
             const NOTES = 11;
             const FIND_A_GRAVE_ID = 12;
             const SKETCHFAB_ID = 13;
+            const CONFIRMED = 14;
             
             const SINGLE_GRAVES = ['D', 'ZZ', 'MHillside'];
             
@@ -589,17 +606,12 @@
               { name: "Row6-L", min: 508, max: 530 },
               { name: "RowX", values: ['92X', '93X', '99 X', '100 X', '138', '152a', '157 X', '208', '210', '280', '289A', '351', '352', '356', '358', '498'] }
             ];
-
-            // Section ZZ row ranges (example - you’ll need to adjust bas   ed on your sheet)
+            
             const SECTION_ZZ_ROWS = [
-              {name: "Section1", min: 1, max: 9 },
-
-              {name: "Section2", min: 10, max: 20},
-
-              {name: "Section3", min: 21, max: 34}
-            ];
-
-
+              { name: "ZZ Section1", ids: ["230054073", "230054100", "sect1-1", "143938754", "143938953", "sect1-2", "221187565", "221187600", "221187583"] },
+              { name: "ZZ Section2", ids: ["221187529", "sect2-1", "202165763", "143938936", "202165609", "143938944", "221187489", "221187547", "231054486", "111325431", "231136160"] },
+              { name: "ZZ Section3", ids: ["229423287", "227764237", "111325498", "111325473", "227764249", "227764258", "260060445", "143938928", "140896958", "227735397", "260060428", "227515745", "221066010", "143938910"] }
+            ]
             
             /* 
             Data structure for info from the google sheet.
@@ -647,10 +659,18 @@
             
                   // Single graves use GRAVE_NUMBER instead of LOT_NUMBER
                   if (SINGLE_GRAVES.includes(grave[SECTION])) {
-                    option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (${grave[SECTION]} ${grave[GRAVE_NUMBER]})`.replace(
-                      /  */g,
-                      " "
-                    );
+                    // Special case for ZZ section
+                    if (grave[SECTION] === "ZZ") {
+                      option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (ZZ)`.replace(
+                        /  */g,
+                        " "
+                      );
+                    } else {
+                      option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (${grave[SECTION]} ${grave[GRAVE_NUMBER]})`.replace(
+                        /  */g,
+                        " "
+                      );
+                    }
                   } else {
                     // For all other sections, use LOT_NUMBER
                     option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (${grave[SECTION]} ${grave[LOT_NUMBER]})`.replace(
@@ -786,32 +806,33 @@
                   displayPlot("MHillside");
                 };
               }
-              
+            
               //Event listener for Section ZZ
               var zzPolygons = document.querySelectorAll('[class^="ZZ "]');
               for (let polygon of zzPolygons) {
-                polygon.onmouseover = () => {   
-                label.style.display = "block";
-                polygon.style.opacity = 1;
-              };
-
-                polygon.onmousemove = (evt) => {        
-                    label.style.left = `${evt.clientX + 10}px`;
-                    label.style.top = `${evt.clientY + 10}px`;
-                    label.innerText = polygon.classList[0] + " " + polygon.classList[1];
+                polygon.onmouseover = () => {
+                  label.style.display = "block";
+                  polygon.style.opacity = 1;
                 };
-
+            
+                polygon.onmousemove = (evt) => {
+                  label.style.left = `${evt.clientX + 10}px`;
+                  label.style.top = `${evt.clientY + 10}px`;
+                  label.innerText = polygon.classList[0];
+                };
+            
                 polygon.onmouseleave = () => {
-                    label.style.display = "none";
-                    polygon.style.opacity = 0;
+                  label.style.display = "none";
+                  polygon.style.opacity = 0;
                 };
-
+            
                 polygon.onclick = () => {
-                    displayPlot(polygon.classList[0] + " " + polygon.classList[1]);
+                  // Extract section number from class name
+                  let sectionName = polygon.classList[0] + " " + polygon.classList[1];
+                  displayPlot(sectionName);
                 };
-            }
-
-
+              }
+            
               // Event listener specifically for Section D
               var sectionDPolygons = document.querySelectorAll('[class^="D "]');
               for (let polygon of sectionDPolygons) {
@@ -1013,38 +1034,37 @@
                   if (person[SECTION] == "M" && person[LOT_NUMBER] == "Hillside")
                     people.push(person);
                 });
+              } else if (plotInfo.startsWith("ZZ Section")) {
+                // Get section number (1, 2, or 3) from the plotInfo string
+                const sectionNum = plotInfo.replace("ZZ Section", "").trim();
+            
+                // Find the matching section configuration in SECTION_ZZ_ROWS
+                const matchingSection = SECTION_ZZ_ROWS.find(section =>
+                  section.name === `ZZ Section${sectionNum}`
+                );
+            
+                if (matchingSection) {
+                  // Filter all people in ZZ section that have a Find-A-Grave ID matching the IDs in this section
+                  for (let person of sheetData.all) {
+                    if (person[SECTION] === "ZZ") {
+                      const findAGraveId = person[FIND_A_GRAVE_ID];
+            
+                      // Only include people whose Find-A-Grave ID is in this section's ID list
+                      if (matchingSection.ids.includes(findAGraveId)) {
+                        people.push(person);
+                      }
+                    }
+                  }
+                }
             
                 // ACCOUNTING FOR SINGLE GRAVE AREAS ENDS HERE
             
-              } else if (plotInfo.startsWith("ZZ Section")) {
-                let sectionName = plotInfo.replace("ZZ ", "");
-
-                for (let person of sheetData.all) {
-                  if (person[SECTION] === "ZZ") {
-                    const grave = person[GRAVE_NUMBER];
-
-                    const matchingRow = SECTION_ZZ_ROWS.find((row) => {
-                      if (row.name !== sectionName) return false;
-
-                      if (row.values) {
-                        return row.values.includes(grave);
-                      } else {
-                        const graveNum = parseInt(grave);
-                        return graveNum >= row.min && graveNum <= row.max;
-                      }
-                    });
-
-                    if (matchingRow) {
-                      people.push(person);
-                    } 
-                  }
-                }
               } else {
                 sheetData.all.forEach((person) => {
                   if (plotInfo == `${person[SECTION]}${person[LOT_NUMBER]}`)
                     people.push(person);
                 });
-              } 
+              }
             
               // Hides the individual person container.
               document.getElementById("person-data").style.display = "none";
@@ -1075,13 +1095,18 @@
             
                 // Checks if plot is a single grave area and uses lot number or grave number accordingly
                 if (SINGLE_GRAVES.includes(person[SECTION])) {
-                  inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (${person[SECTION]} ${person[GRAVE_NUMBER]})`;
+                  // Special case for ZZ section
+                  if (person[SECTION] === "ZZ") {
+                    inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (ZZ)`;
+                  } else {
+                    inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (${person[SECTION]} ${person[GRAVE_NUMBER]})`;
+                  }
                 } else {
                   inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (${person[SECTION]} ${person[LOT_NUMBER]})`;
                 }
             
                 // Removing double spaces from the innerText.
-                inhabitant.innerText.replace(/  +/g, " ");
+                inhabitant.innerText = inhabitant.innerText.replace(/  +/g, " ");
             
                 // Adding click events
                 inhabitant.onclick = () => {
@@ -1181,6 +1206,14 @@
                 // It contains all relevant information about the person.
                 let info = document.createElement("div");
                 info.classList.add("person-info");
+            
+                // Add the confirmed tag if it exists (used to tell the user if a grave in an approximated section is verified in person)
+                if (match[CONFIRMED] === "C") {
+                  let confirmedTag = document.createElement("h4");
+                  confirmedTag.classList.add("confirmed-tag");
+                  confirmedTag.innerText = "CONFIRMED";
+                  info.append(confirmedTag);
+                }
             
                 // Creating the section element and adding it to the info div.
                 let section = document.createElement("p");
@@ -1306,17 +1339,16 @@
                   } else if (sect === "MHillside") {
                     objClass = "MHillside";
                   } else if (sect === "ZZ") {
-                    const graveNum = parseInt(grave);
+                    // Look for the section containing this person's Find A Grave ID
+                    const findAGraveId = match[FIND_A_GRAVE_ID];
                     const rowDef = SECTION_ZZ_ROWS.find(function (row) {
-                      // Check if grave num is within defined ranges
-                      return graveNum >= row.min && graveNum <= row.max;
+                      return row.ids.includes(findAGraveId);
                     });
+            
                     if (rowDef) {
                       objClass = `ZZ ${rowDef.name}`;
                     }
                   }
-            
-                  // Add additional cases for other single grave areas
                 } else {
                   // For regular sections (like B3, D34 etc.)
                   objClass = `${sect}${lot}`;
@@ -1423,9 +1455,6 @@
             }
         </script>
     </head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-
 <body>
     <!-- Loading -->
     <!-- This holds a small loading box that plays an animation while the website waits for the Google Sheets data. -->
@@ -1451,7 +1480,9 @@
         </div>
     </form>
 
-    <button id="mobile-search-toggle">&#x1F50D;</button>
+    <button id="mobile-search-toggle"><img
+            src="https://static.wixstatic.com/media/b655f3_c5c3997c9f884e8c909ecd2dc292d892~mv2.webp" alt="Search"
+            id="search-icon"></button>
 
     <!-- Person Info -->
     <!-- Displays information about people. -->
@@ -1503,6 +1534,7 @@
                 <p id="zoom-in">+</p>
                 <p id="zoom-out">-</p>
             </div> -->
+
 
         <!-- Polygons -->
         <svg id="map-highlights" viewBox="0 0 1632 866">
@@ -3407,4 +3439,60 @@
             <polygon class="grave V12" points="1077,545 1069,553 1080,566 1090,553"></polygon>
             <polygon class="grave V13" points="1072,406 1060,418 1067,428 1082,419"></polygon>
             <polygon class="grave V14" points="1082,419 1090,433 1075,440 1067,428"></polygon>
+            <polygon class="grave V15" points="1076,439 1079,453 1095,449 1090,434"></polygon>
+            <polygon class="grave V16" points="1079,452 1082,467 1098,465 1096,450"></polygon>
+            <polygon class="grave V17" points="1082,467 1082,481 1098,481 1098,465"></polygon>
+            <polygon class="grave V18" points="1083,481 1082,496 1099,497 1098,481"></polygon>
+            <polygon class="grave V19" points="1082,495 1077,508 1095,512 1098,496"></polygon>
+            <polygon class="grave V20" points="1077,508 1073,520 1088,527 1095,511"></polygon>
+            <polygon class="grave V21" points="1073,520 1066,533 1080,541 1089,527"></polygon>
+            <polygon class="grave V22" points="1066,533 1080,540 1069,554 1059,541"></polygon>
+            <polygon class="grave V23" points="1057,419 1067,432 1053,439 1046,429"></polygon>
+            <polygon class="grave V24" points="1066,431 1075,449 1059,453 1053,439"></polygon>
+            <polygon class="grave V25" points="1060,451 1062,465 1079,464 1076,450"></polygon>
+            <polygon class="grave V26" points="1063,466 1063,480 1080,480 1079,464"></polygon>
+            <polygon class="grave V27" points="1063,479 1062,493 1077,495 1080,480"></polygon>
+            <polygon class="grave V28" points="1062,492 1057,505 1072,512 1077,496"></polygon>
+            <polygon class="grave V29" points="1057,505 1051,518 1066,526 1072,512"></polygon>
+            <polygon class="grave V30" points="1051,517 1044,526 1057,537 1066,526"></polygon>
+            <polygon class="grave V31" points="1046,430 1039,441 1041,452 1057,447"></polygon>
+            <polygon class="grave V32" points="1041,452 1046,466 1062,464 1057,447"></polygon>
+            <polygon class="grave V33" points="1047,465 1047,480 1063,480 1062,464"></polygon>
+            <polygon class="grave V34" points="1047,480 1044,493 1059,497 1062,480"></polygon>
+            <polygon class="grave V35" points="1044,493 1039,506 1053,512 1059,496"></polygon>
+            <polygon class="grave V36" points="1039,506 1039,516 1044,526 1054,513"></polygon>
+
+            <!-- Section W -->
+            <polygon class="grave W1" points=" 958,441  974,434  979,449  969,454"></polygon>
+            <polygon class="grave W2" points=" 974,433  988,431  988,447  979,449"></polygon>
+            <polygon class="grave W3" points=" 988,431 1004,434  997,449  987,447"></polygon>
+            <polygon class="grave W4" points="1004,434 1018,444 1008,454  998,449"></polygon>
+            <polygon class="grave W5" points="1021,447 1030,462 1017,467 1010,457"></polygon>
+            <polygon class="grave W6" points="1017,467 1017,477 1033,479 1030,463"></polygon>
+            <polygon class="grave W7" points="1017,477 1015,488 1028,494 1033,478"></polygon>
+            <polygon class="grave W8" points="1015,488 1011,496 1023,505 1028,494"></polygon>
+            <polygon class="grave W9" points=" 969,454  979,464  988,461  987,447"></polygon>
+            <polygon class="grave W10" points=" 987,447  987,461  997,464 1008,454"></polygon>
+            <polygon class="grave W11" points="1010,457 1000,468 1002,477 1018,477 1017,467"></polygon>
+            <polygon class="grave W12" points="1002,477 1000,488 1011,496 1015,488 1017,477"></polygon>
+            <polygon class="grave W13" points=" 955,446  966,459  959,467  946,460"></polygon>
+            <polygon class="grave W14" points=" 946,459  943,475  958,476  959,467"></polygon>
+            <polygon class="grave W15" points=" 943,476  945,490  959,488  958,475"></polygon>
+            <polygon class="grave W16" points=" 945,490  952,505  964,493  959,489"></polygon>
+            <polygon class="grave W17" points=" 966,498  978,505  971,519  956,509"></polygon>
+            <polygon class="grave W18" points=" 978,504  971,520  987,523  987,507"></polygon>
+            <polygon class="grave W19" points=" 987,507  997,505 1000,520  987,523"></polygon>
+            <polygon class="grave W20" points=" 998,505 1008,502 1017,512 1001,519"></polygon>
+            <polygon class="grave W21" points=" 966,459  975,467  972,475  958,476 959,467"></polygon>
+            <polygon class="grave W22" points=" 958,475  971,475  975,483  964,493 959,487"></polygon>
+            <polygon class="grave W23" points=" 966,499  978,488  985,490  988,507 977,504"></polygon>
+            <polygon class="grave W24" points=" 984,490  995,488 1008,501  988,507"></polygon>
+
+            <!-- Landmarks -->
+            <circle class="landmark Fountain" cx="988" cy="477" r="18"></circle>
+            <polygon class="landmark Chapel" points="872,693 853,683 844,705 864,714"></polygon>
+            <polygon class="landmark Entrance" points="752,268 766,238 775,241 762,274"></polygon>
+        </svg>
+    </div>
+</body>
 </html>
