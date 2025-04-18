@@ -1,5 +1,5 @@
 // Constants used when getting the values from the spreadsheet.
-const SPREADSHEET_ID = "1TMlB6OfVMGAKSmMoX_FL42b7g6ai8y7C_q0lcAxr-1E";
+const SPREADSHEET_ID = "1oB7kgRwhQm-dYftSOGRPD0xIaAJzecGpxFUHgBup80I";
 const API_KEY = "AIzaSyB2nE9aGbN51EuV_S0yGf-IyxvcGGUcDao";
 
 // These constants allow easier access to the data from each google sheet.
@@ -12,12 +12,13 @@ const ORIENTATION = 3;
 const LAST_NAME = 4;
 const FIRST_NAME = 5;
 const MIDDLE_NAME = 6;
-const TITLE = 7;
-const DEATH_DATE = 8;
-const BURIAL_DATE = 9;
-const NOTES = 10;
-const FIND_A_GRAVE_ID = 11;
-const SKETCHFAB_ID = 12;
+const TITLE = 8;
+const DEATH_DATE = 9;
+const BURIAL_DATE = 10;
+const NOTES = 11;
+const FIND_A_GRAVE_ID = 12;
+const SKETCHFAB_ID = 13;
+const CONFIRMED = 14;
 
 const SINGLE_GRAVES = ['D', 'ZZ', 'MHillside'];
 
@@ -37,6 +38,12 @@ const SECTION_D_ROWS = [
   { name: "Row6-L", min: 508, max: 530 },
   { name: "RowX", values: ['92X', '93X', '99 X', '100 X', '138', '152a', '157 X', '208', '210', '280', '289A', '351', '352', '356', '358', '498'] }
 ];
+
+const SECTION_ZZ_ROWS = [
+  { name: "ZZ Section1", ids: ["230054073", "230054100", "sect1-1", "143938754", "143938953", "sect1-2", "221187565", "221187600", "221187583"] },
+  { name: "ZZ Section2", ids: ["221187529", "sect2-1", "202165763", "143938936", "202165609", "143938944", "221187489", "221187547", "231054486", "111325431", "231136160"] },
+  { name: "ZZ Section3", ids: ["229423287", "227764237", "111325498", "111325473", "227764249", "227764258", "260060445", "143938928", "140896958", "227735397", "260060428", "227515745", "221066010", "143938910"] }
+]
 
 /* 
 Data structure for info from the google sheet.
@@ -84,10 +91,18 @@ window.onload = () => {
 
       // Single graves use GRAVE_NUMBER instead of LOT_NUMBER
       if (SINGLE_GRAVES.includes(grave[SECTION])) {
-        option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (${grave[SECTION]} ${grave[GRAVE_NUMBER]})`.replace(
-          /  */g,
-          " "
-        );
+        // Special case for ZZ section
+        if (grave[SECTION] === "ZZ") {
+          option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (ZZ)`.replace(
+            /  */g,
+            " "
+          );
+        } else {
+          option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (${grave[SECTION]} ${grave[GRAVE_NUMBER]})`.replace(
+            /  */g,
+            " "
+          );
+        }
       } else {
         // For all other sections, use LOT_NUMBER
         option.value = `${grave[FIRST_NAME]} ${grave[LAST_NAME]} (${grave[SECTION]} ${grave[LOT_NUMBER]})`.replace(
@@ -221,6 +236,32 @@ window.onload = () => {
     // On click display all MHillside entries (matchbox)
     hillsideSection.onclick = () => {
       displayPlot("MHillside");
+    };
+  }
+
+  //Event listener for Section ZZ
+  var zzPolygons = document.querySelectorAll('[class^="ZZ "]');
+  for (let polygon of zzPolygons) {
+    polygon.onmouseover = () => {
+      label.style.display = "block";
+      polygon.style.opacity = 1;
+    };
+
+    polygon.onmousemove = (evt) => {
+      label.style.left = `${evt.clientX + 10}px`;
+      label.style.top = `${evt.clientY + 10}px`;
+      label.innerText = polygon.classList[0];
+    };
+
+    polygon.onmouseleave = () => {
+      label.style.display = "none";
+      polygon.style.opacity = 0;
+    };
+
+    polygon.onclick = () => {
+      // Extract section number from class name
+      let sectionName = polygon.classList[0] + " " + polygon.classList[1];
+      displayPlot(sectionName);
     };
   }
 
@@ -425,6 +466,28 @@ function displayPlot(plotInfo) {
       if (person[SECTION] == "M" && person[LOT_NUMBER] == "Hillside")
         people.push(person);
     });
+  } else if (plotInfo.startsWith("ZZ Section")) {
+    // Get section number (1, 2, or 3) from the plotInfo string
+    const sectionNum = plotInfo.replace("ZZ Section", "").trim();
+
+    // Find the matching section configuration in SECTION_ZZ_ROWS
+    const matchingSection = SECTION_ZZ_ROWS.find(section =>
+      section.name === `ZZ Section${sectionNum}`
+    );
+
+    if (matchingSection) {
+      // Filter all people in ZZ section that have a Find-A-Grave ID matching the IDs in this section
+      for (let person of sheetData.all) {
+        if (person[SECTION] === "ZZ") {
+          const findAGraveId = person[FIND_A_GRAVE_ID];
+
+          // Only include people whose Find-A-Grave ID is in this section's ID list
+          if (matchingSection.ids.includes(findAGraveId)) {
+            people.push(person);
+          }
+        }
+      }
+    }
 
     // ACCOUNTING FOR SINGLE GRAVE AREAS ENDS HERE
 
@@ -464,13 +527,18 @@ function displayPlot(plotInfo) {
 
     // Checks if plot is a single grave area and uses lot number or grave number accordingly
     if (SINGLE_GRAVES.includes(person[SECTION])) {
-      inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (${person[SECTION]} ${person[GRAVE_NUMBER]})`;
+      // Special case for ZZ section
+      if (person[SECTION] === "ZZ") {
+        inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (ZZ)`;
+      } else {
+        inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (${person[SECTION]} ${person[GRAVE_NUMBER]})`;
+      }
     } else {
       inhabitant.innerText = `${person[FIRST_NAME]} ${person[MIDDLE_NAME]} ${person[LAST_NAME]} (${person[SECTION]} ${person[LOT_NUMBER]})`;
     }
 
     // Removing double spaces from the innerText.
-    inhabitant.innerText.replace(/  +/g, " ");
+    inhabitant.innerText = inhabitant.innerText.replace(/  +/g, " ");
 
     // Adding click events
     inhabitant.onclick = () => {
@@ -570,6 +638,14 @@ function displayPerson(personInfo) {
     // It contains all relevant information about the person.
     let info = document.createElement("div");
     info.classList.add("person-info");
+
+    // Add the confirmed tag if it exists (used to tell the user if a grave in an approximated section is verified in person)
+    if (match[CONFIRMED] === "C") {
+      let confirmedTag = document.createElement("h4");
+      confirmedTag.classList.add("confirmed-tag");
+      confirmedTag.innerText = "CONFIRMED";
+      info.append(confirmedTag);
+    }
 
     // Creating the section element and adding it to the info div.
     let section = document.createElement("p");
@@ -694,18 +770,17 @@ function displayPerson(personInfo) {
         }
       } else if (sect === "MHillside") {
         objClass = "MHillside";
-      } /* else if (sect === "ZZ") {
-        const graveNum = parseInt(grave);
+      } else if (sect === "ZZ") {
+        // Look for the section containing this person's Find A Grave ID
+        const findAGraveId = match[FIND_A_GRAVE_ID];
         const rowDef = SECTION_ZZ_ROWS.find(function (row) {
-          // Check if grave num is within defined ranges
-          return graveNum >= row.min && graveNum <= row.max;
+          return row.ids.includes(findAGraveId);
         });
+
         if (rowDef) {
           objClass = `ZZ ${rowDef.name}`;
         }
-      } */
-
-      // Add additional cases for other single grave areas
+      }
     } else {
       // For regular sections (like B3, D34 etc.)
       objClass = `${sect}${lot}`;
